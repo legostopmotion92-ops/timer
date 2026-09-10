@@ -1,1 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Aesthetic Study Timer</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --card-border: #333333;
+            --accent: #38bdf8;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+        }
 
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .timer-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            width: 300px;
+        }
+
+        h2 {
+            margin-top: 0;
+            font-size: 18px;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .time-display {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 20px 0;
+            color: var(--text-main);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background-color: #2a2a2a;
+            color: var(--text-main);
+            border: 1px solid var(--card-border);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--accent);
+            color: #121212;
+            border-color: var(--accent);
+        }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+        }
+
+        .preset-buttons button {
+            font-size: 12px;
+            padding: 6px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="timer-card">
+    <h2>Focus Timer</h2>
+    <div class="time-display" id="display">25:00</div>
+    
+    <div class="controls">
+        <button id="start-btn" onclick="toggleTimer()">Start</button>
+        <button onclick="resetTimer()">Reset</button>
+    </div>
+
+    <div class="preset-buttons">
+        <button onclick="setDuration(15)">15m</button>
+        <button onclick="setDuration(25)">25m</button>
+        <button onclick="setDuration(45)">45m</button>
+    </div>
+</div>
+
+<!-- Hooked up to your Chopper audio file -->
+<audio id="alarm-sound" src="chopper_eyecatcher.mp3" preload="auto"></audio>
+
+<script>
+    let totalSeconds = 25 * 60;
+    let remainingSeconds = totalSeconds;
+    let timerInterval = null;
+    let isRunning = false;
+
+    const display = document.getElementById('display');
+    const startBtn = document.getElementById('start-btn');
+    const alarmSound = document.getElementById('alarm-sound');
+
+    function updateDisplay() {
+        const minutes = Math.floor(remainingSeconds / 60);
+        const seconds = remainingSeconds % 60;
+        display.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    function toggleTimer() {
+        if (isRunning) {
+            clearInterval(timerInterval);
+            startBtn.textContent = "Start";
+            isRunning = false;
+        } else {
+            if (remainingSeconds <= 0) return;
+            startBtn.textContent = "Pause";
+            isRunning = true;
+            
+            timerInterval = setInterval(() => {
+                if (remainingSeconds > 0) {
+                    remainingSeconds--;
+                    updateDisplay();
+                } else {
+                    clearInterval(timerInterval);
+                    isRunning = false;
+                    startBtn.textContent = "Start";
+                    playAlarm();
+                }
+            }, 1000);
+        }
+    }
+
+    function resetTimer() {
+        clearInterval(timerInterval);
+        isRunning = false;
+        startBtn.textContent = "Start";
+        remainingSeconds = totalSeconds;
+        updateDisplay();
+    }
+
+    function setDuration(minutes) {
+        clearInterval(timerInterval);
+        isRunning = false;
+        startBtn.textContent = "Start";
+        totalSeconds = minutes * 60;
+        remainingSeconds = totalSeconds;
+        updateDisplay();
+    }
+
+    function playAlarm() {
+        alarmSound.currentTime = 0; // Rewind to start
+        alarmSound.play().catch(error => {
+            console.log("Audio play failed (browser restriction): ", error);
+        });
+    }
+
+    updateDisplay();
+</script>
+
+</body>
+</html>
